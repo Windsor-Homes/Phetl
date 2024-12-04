@@ -10,7 +10,7 @@ class EtlProcessBuilder
 
     public function __construct()
     {
-       $this->process = new Pipeline();
+        $this->process = new Pipeline;
     }
 
     public function extract($extractor, $config = [])
