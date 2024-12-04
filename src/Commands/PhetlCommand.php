@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Windsor\Phetl\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class PhetlCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'phetl';
 
     public $description = 'My command';
 
