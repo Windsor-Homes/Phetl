@@ -39,46 +39,45 @@ $extractor = $extract->join(
     'isbn',
 );
 
-
 $transformer = Transform::renameHeaders([
     'book_title' => 'title',
 ])
-->headersToSnakeCase()
-->defaultValues([
-    'genre' => 'Fiction',
-])
-->casts([
-    'publishing_date' => Carbon::class,
-    'isbn' => 'int',
-])
-->titleCase('title')
-->addColumns([
-    'author_name' => function ($row) {
-        return $row['author_first_name'] . ' ' . $row['author_last_name'];
-    },
-    'reading_level' => '8',
-])
-->dropColumns('author_first_name', 'author_last_name')
-->unpackColumn(
-    'isbn',
-    ['isbn_10', 'isbn_13'],
-    fn ($value) => explode(',', $value)
-)
-->mapForeignKey('publishing_company', function ($value) {
-    return PublishingCompany::firstOrCreate(['name' => $value])->id;
-})
-->mapForeignKeyToDatabase('genre', 'genres', 'name', 'id')
-->renameColumns([
-    'publishing_company' => 'publisher_id',
-    'genre' => 'genre_id',
-])
-->unique('isbn_13')
-->where('publishing_date', '>', now()->subYears(5))
-->validate([
-    'title' => 'required',
-    'author_name' => 'required',
-    'isbn_10' => 'required|digits:10',
-    'isbn_13' => 'required|digits:13',
-    'publishing_date' => 'required|date',
-    'reading_level' => 'required|numeric',
-]);
+    ->headersToSnakeCase()
+    ->defaultValues([
+        'genre' => 'Fiction',
+    ])
+    ->casts([
+        'publishing_date' => Carbon::class,
+        'isbn' => 'int',
+    ])
+    ->titleCase('title')
+    ->addColumns([
+        'author_name' => function ($row) {
+            return $row['author_first_name'].' '.$row['author_last_name'];
+        },
+        'reading_level' => '8',
+    ])
+    ->dropColumns('author_first_name', 'author_last_name')
+    ->unpackColumn(
+        'isbn',
+        ['isbn_10', 'isbn_13'],
+        fn ($value) => explode(',', $value)
+    )
+    ->mapForeignKey('publishing_company', function ($value) {
+        return PublishingCompany::firstOrCreate(['name' => $value])->id;
+    })
+    ->mapForeignKeyToDatabase('genre', 'genres', 'name', 'id')
+    ->renameColumns([
+        'publishing_company' => 'publisher_id',
+        'genre' => 'genre_id',
+    ])
+    ->unique('isbn_13')
+    ->where('publishing_date', '>', now()->subYears(5))
+    ->validate([
+        'title' => 'required',
+        'author_name' => 'required',
+        'isbn_10' => 'required|digits:10',
+        'isbn_13' => 'required|digits:13',
+        'publishing_date' => 'required|date',
+        'reading_level' => 'required|numeric',
+    ]);
