@@ -8,6 +8,28 @@ use Windsor\Phetl\Commands\PhetlCommand;
 
 class PhetlServiceProvider extends PackageServiceProvider
 {
+    public function register()
+    {
+        parent::register();
+
+        $this->app->bind(Phetl::class, function () {
+            return new Phetl();
+        });
+
+        $this->app->bind(ExtractorBuilder::class, function () {
+            return new ExtractorBuilder();
+        });
+
+        $this->app->bind(TransformationPipeline::class, function () {
+            return new TransformationPipeline();
+        });
+
+        $this->app->bind(LoaderBuilder::class, function () {
+            return new LoaderBuilder();
+        });
+
+    }
+
     public function configurePackage(Package $package): void
     {
         /*

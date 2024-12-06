@@ -1,5 +1,9 @@
 <?php
 
+use Windsor\Phetl\Facades\Extract;
+use Windsor\Phetl\Facades\Transform;
+use Windsor\Phetl\Facades\Load;
+
 $api_extractor = Extract::fromApi()
     ->endpoint('https://api.example.com/api/v2/books')
     ->acceptsJson()
@@ -31,7 +35,7 @@ $csv_extractor = Extract::fromCsv()
 $query_extractor = Extract::fromQuery()
     ->query($query);
 
-$merged_extractor = Exctract::concat($api_extractor, $csv_extractor);
+$merged_extractor = Extract::concat($api_extractor, $csv_extractor);
 
 $extractor = $extract->join(
     $query_extractor,
