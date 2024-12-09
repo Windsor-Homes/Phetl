@@ -2,7 +2,6 @@
 
 use Windsor\Phetl\Facades\Extract;
 use Windsor\Phetl\Facades\Transform;
-use Windsor\Phetl\Facades\Load;
 
 $api_extractor = Extract::fromApi()
     ->endpoint('https://api.example.com/api/v2/books')

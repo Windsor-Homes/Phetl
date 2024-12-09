@@ -4,7 +4,6 @@ namespace Windsor\Phetl\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-
 /**
  * @see \Windsor\Phetl\LoadBuilder
  */

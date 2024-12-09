@@ -13,19 +13,19 @@ class PhetlServiceProvider extends PackageServiceProvider
         parent::register();
 
         $this->app->bind(Phetl::class, function () {
-            return new Phetl();
+            return new Phetl;
         });
 
         $this->app->bind(ExtractorBuilder::class, function () {
-            return new ExtractorBuilder();
+            return new ExtractorBuilder;
         });
 
         $this->app->bind(TransformationPipeline::class, function () {
-            return new TransformationPipeline();
+            return new TransformationPipeline;
         });
 
         $this->app->bind(LoaderBuilder::class, function () {
-            return new LoaderBuilder();
+            return new LoaderBuilder;
         });
 
     }

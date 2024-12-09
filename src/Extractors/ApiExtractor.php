@@ -6,7 +6,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\LazyCollection;
 use Windsor\Phetl\Contracts\Extractor;
 
@@ -38,7 +37,6 @@ class ApiExtractor implements Extractor
 
     protected \Closure $afterExtraction;
 
-
     public function __construct(PendingRequest $request)
     {
         $this->request = $request;
@@ -61,8 +59,8 @@ class ApiExtractor implements Extractor
      *
      * send() - Is blocked to restrict the user from using unsupported HTTP methods.
      *
-     * @param string $method
-     * @param array $parameters
+     * @param  string  $method
+     * @param  array  $parameters
      * @return void
      */
     public function __call($method, $parameters)
@@ -88,7 +86,6 @@ class ApiExtractor implements Extractor
      *
      * The callable will have access to the Extractor instance, the Response Object, and the Extracted data.
      *
-     * @param callable $callback
      * @return ApiExtractor
      */
     public function afterExtraction(callable $callback): static
@@ -98,6 +95,7 @@ class ApiExtractor implements Extractor
         }
 
         $this->afterExtraction = $callback;
+
         return $this;
     }
 
@@ -106,7 +104,6 @@ class ApiExtractor implements Extractor
      *
      * The callable will have access to the Extractor instance, and the Response Object.
      *
-     * @param callable $callback
      * @return ApiExtractor
      */
     public function beforeExtraction(callable $callback): static
@@ -116,6 +113,7 @@ class ApiExtractor implements Extractor
         }
 
         $this->beforeExtraction = $callback;
+
         return $this;
     }
 
@@ -131,7 +129,6 @@ class ApiExtractor implements Extractor
      *
      * Parse the response body with the given parser in order to extract the data
      *
-     * @param callable $parser
      * @return void
      */
     public function parseBodyWith(callable $parser): static
@@ -141,30 +138,32 @@ class ApiExtractor implements Extractor
         }
 
         $this->parser = $parser;
+
         return $this;
     }
 
     /**
      * Using dot notation, set the data path that will be extracted from the response body.
      *
-     * @param string $key
      * @return ApiExtractor
      */
     public function dataPath(string $key): static
     {
         $this->data_path = $key;
+
         return $this;
     }
 
     /**
      * Define the HTTP method that will be used for the API request.
      *
-     * @param string $method
+     * @param  string  $method
      * @return ApiExtractor
      */
     public function method($method): static
     {
         $this->method = strtolower($method);
+
         return $this;
     }
 
@@ -173,14 +172,15 @@ class ApiExtractor implements Extractor
      *
      * This method overrides the "get()" method on the request class, which actually sends the request.
      *
-     * @param mixed $url
-     * @param mixed $query
+     * @param  mixed  $url
+     * @param  mixed  $query
      * @return ApiExtractor
      */
     public function get($url, $query = []): static
     {
         $this->endpoint = $url;
         $this->query_string = $query;
+
         return $this;
     }
 
@@ -189,8 +189,8 @@ class ApiExtractor implements Extractor
      *
      * This method overrides the "post()" method on the request class, which actually sends the request.
      *
-     * @param mixed $url
-     * @param mixed $data
+     * @param  mixed  $url
+     * @param  mixed  $data
      * @return ApiExtractor
      */
     public function post($url, $data = []): static
@@ -198,17 +198,19 @@ class ApiExtractor implements Extractor
         $this->method = 'post';
         $this->endpoint = $url;
         $this->post_data = $data;
+
         return $this;
     }
 
     /**
      * Immediately execute the given callback if there was an error in the response.
-     * @param callable $callback
+     *
      * @return ApiExtractor
      */
     public function onError(callable $callback): static
     {
         $this->onError($callback);
+
         return $this;
     }
 
@@ -220,13 +222,12 @@ class ApiExtractor implements Extractor
     public function lazy(): static
     {
         $this->lazy = true;
+
         return $this;
     }
 
     /**
      * Extract the data from the API response.
-     *
-     * @return Enumerable
      */
     public function extract(): Enumerable
     {
@@ -235,6 +236,7 @@ class ApiExtractor implements Extractor
         if ($this->parser) {
             $data = call_user_func($this->parser, $response);
             $this->validateParserReturnType($data);
+
             return $data;
         }
 
@@ -250,8 +252,7 @@ class ApiExtractor implements Extractor
     /**
      * Validate that the parser returns an instance of Collection or LazyCollection.
      *
-     * @param mixed $data
-     * @return void
+     * @param  mixed  $data
      */
     protected function validateParserReturnType($data): void
     {
@@ -268,8 +269,6 @@ class ApiExtractor implements Extractor
 
     /**
      * Send the request to the API endpoint.
-     *
-     * @return Response
      */
     protected function sendRequest(): Response
     {
@@ -283,8 +282,7 @@ class ApiExtractor implements Extractor
 
         if ($this->error_handler) {
             $response->onError($response);
-        }
-        else {
+        } else {
             $response->throwUnlessSuccessful();
         }
 

@@ -9,7 +9,8 @@ class ExtractorBuilder
 {
     public function fromApi(): ApiExtractor
     {
-        $request = new PendingRequest();
+        $request = new PendingRequest;
+
         return new ApiExtractor($request);
     }
 }

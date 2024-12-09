@@ -6,9 +6,5 @@ use Windsor\Phetl\Contracts\Extractor;
 
 class CsvExtractor implements Extractor
 {
-    
-    public function extract()
-    {
-
-    }
+    public function extract() {}
 }

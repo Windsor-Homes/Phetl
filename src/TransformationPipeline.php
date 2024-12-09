@@ -10,12 +10,12 @@ class TransformationPipeline
     protected $transformations = [];
 
     /**
-     * @param string $transformation
      * @return $this
      */
     public function add(string $transformation)
     {
         $this->transformations[] = $transformation;
+
         return $this;
     }
 

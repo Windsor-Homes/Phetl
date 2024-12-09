@@ -2,7 +2,4 @@
 
 namespace Windsor\Phetl;
 
-class LoadBuilder
-{
-
-}
+class LoadBuilder {}
