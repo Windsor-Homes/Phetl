@@ -5,6 +5,9 @@ namespace Windsor\Phetl\Extractors;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Enumerable;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\LazyCollection;
 use Windsor\Phetl\Contracts\Extractor;
 
 // TODO: utilize the PendingRequest::sink() method to save the response to a file, and process the file instead of the direct response.
@@ -27,7 +30,13 @@ class ApiExtractor implements Extractor
 
     protected \Closure $parser;
 
-    protected string $data_path;
+    protected ?string $data_path = null;
+
+    protected bool $lazy = false;
+
+    protected \Closure $beforeExtraction;
+
+    protected \Closure $afterExtraction;
 
 
     public function __construct(PendingRequest $request)
@@ -75,6 +84,42 @@ class ApiExtractor implements Extractor
     }
 
     /**
+     * Set a callable that will be executed after the data is extracted from the response.
+     *
+     * The callable will have access to the Extractor instance, the Response Object, and the Extracted data.
+     *
+     * @param callable $callback
+     * @return ApiExtractor
+     */
+    public function afterExtraction(callable $callback): static
+    {
+        if (! $callback instanceof \Closure) {
+            $callback = \Closure::fromCallable($callback);
+        }
+
+        $this->afterExtraction = $callback;
+        return $this;
+    }
+
+    /**
+     * Set a callable that will be executed before the data is extracted from the response.
+     *
+     * The callable will have access to the Extractor instance, and the Response Object.
+     *
+     * @param callable $callback
+     * @return ApiExtractor
+     */
+    public function beforeExtraction(callable $callback): static
+    {
+        if (! $callback instanceof \Closure) {
+            $callback = \Closure::fromCallable($callback);
+        }
+
+        $this->beforeExtraction = $callback;
+        return $this;
+    }
+
+    /**
      * Give the extractor a callable that will be used to parse the response body.
      * The callable should accept an instance of Illuminate\Http\Client\Response as an argument and return the data that will be processed, as an iterable.
      *
@@ -111,6 +156,12 @@ class ApiExtractor implements Extractor
         return $this;
     }
 
+    /**
+     * Define the HTTP method that will be used for the API request.
+     *
+     * @param string $method
+     * @return ApiExtractor
+     */
     public function method($method): static
     {
         $this->method = strtolower($method);
@@ -150,22 +201,76 @@ class ApiExtractor implements Extractor
         return $this;
     }
 
-    /
+    /**
+     * Immediately execute the given callback if there was an error in the response.
+     * @param callable $callback
+     * @return ApiExtractor
+     */
     public function onError(callable $callback): static
     {
         $this->onError($callback);
         return $this;
     }
 
-    public function extract()
+    /**
+     * Set the extractor to return a LazyCollection instead of a Collection.
+     *
+     * @return ApiExtractor
+     */
+    public function lazy(): static
+    {
+        $this->lazy = true;
+        return $this;
+    }
+
+    /**
+     * Extract the data from the API response.
+     *
+     * @return Enumerable
+     */
+    public function extract(): Enumerable
     {
         $response = $this->sendRequest();
 
         if ($this->parser) {
-
+            $data = call_user_func($this->parser, $response);
+            $this->validateParserReturnType($data);
+            return $data;
         }
+
+        $data = $response->collect($this->data_path);
+
+        if ($this->lazy) {
+            return $data->lazy();
+        }
+
+        return $data;
     }
 
+    /**
+     * Validate that the parser returns an instance of Collection or LazyCollection.
+     *
+     * @param mixed $data
+     * @return void
+     */
+    protected function validateParserReturnType($data): void
+    {
+        if ($data instanceof Enumerable) {
+            return;
+        }
+
+        $self_class = self::class;
+        $collection_class = Collection::class;
+        $lazy_collection_class = LazyCollection::class;
+
+        throw new \RuntimeException("The callable passed to {$self_class}::parseBodyWith() must return an instance of {$collection_class} or {$lazy_collection_class}.");
+    }
+
+    /**
+     * Send the request to the API endpoint.
+     *
+     * @return Response
+     */
     protected function sendRequest(): Response
     {
         $extra_data = match ($this->method) {
