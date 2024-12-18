@@ -231,19 +231,29 @@ class ApiExtractor implements Extractor
      */
     public function extract(): Enumerable
     {
+        if ($this->beforeExtraction) {
+            call_user_func($this->beforeExtraction, $this);
+        }
+
         $response = $this->sendRequest();
 
         if ($this->parser) {
             $data = call_user_func($this->parser, $response);
             $this->validateParserReturnType($data);
-
-            return $data;
+        }
+        else {
+            $data = $response->collect($this->data_path);
         }
 
-        $data = $response->collect($this->data_path);
-
         if ($this->lazy) {
-            return $data->lazy();
+            $data = $data->lazy();
+        }
+
+        if ($this->afterExtraction) {
+            call_user_func(
+                $this->afterExtraction,
+                $this, $response, $data
+            );
         }
 
         return $data;
