@@ -240,8 +240,7 @@ class ApiExtractor implements Extractor
         if ($this->parser) {
             $data = call_user_func($this->parser, $response);
             $this->validateParserReturnType($data);
-        }
-        else {
+        } else {
             $data = $response->collect($this->data_path);
         }
 
