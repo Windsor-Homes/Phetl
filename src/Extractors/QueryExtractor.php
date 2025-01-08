@@ -24,10 +24,14 @@ class QueryExtractor extends Extractor
      * @param string|null $connection
      */
     public function __construct(
-        string|callable|QueryBuilder|EloquentBuilder $query,
+        string|callable|QueryBuilder|EloquentBuilder $query = null,
         array $bindings = [],
         string $connection = null
     ) {
+        if ($query === null) {
+            return;
+        }
+
         if (is_callable($query)) {
             $query = $this->getQueryBuilderFromCallable($query);
         }
@@ -35,6 +39,30 @@ class QueryExtractor extends Extractor
         $this->query = $query;
         $this->bindings = $bindings;
         $this->connection = $connection;
+    }
+
+    public function query(
+        callable|QueryBUilder|EloquentBuilder $query
+    ): static {
+        $this->query = $query;
+
+        if (is_callable($query)) {
+            $this->query = $this->getQueryBuilderFromCallable($query);
+        }
+
+        return $this;
+    }
+
+    public function raw(
+        string $query,
+        array $bindings = [],
+        string $connection = null
+    ): static {
+        $this->query = $query;
+        $this->bindings = $bindings;
+        $this->connection = $connection;
+
+        return $this;
     }
 
     public function extract(): Enumerable

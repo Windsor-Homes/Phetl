@@ -19,7 +19,7 @@ class ExtractorBuilder
     }
 
     public function fromQuery(
-        $query,
+        $query = null,
         $bindings = [],
         $connection = null
     ): QueryExtractor {
