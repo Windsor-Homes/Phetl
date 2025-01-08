@@ -2,21 +2,18 @@
 
 namespace Windsor\Phetl;
 
-use Illuminate\Http\Client\PendingRequest;
 use Windsor\Phetl\Extractors\ApiExtractor;
 use Windsor\Phetl\Extractors\CsvExtractor;
 use Windsor\Phetl\Extractors\QueryExtractor;
 
 class ExtractorBuilder
 {
-    public function fromApi(): ApiExtractor
+    public function fromApi($endpoint = null): ApiExtractor
     {
-        $request = new PendingRequest;
-
-        return new ApiExtractor($request);
+        return new ApiExtractor($endpoint);
     }
 
-    public function fromCsv(string $path): CsvExtractor
+    public function fromCsv(string $path = null): CsvExtractor
     {
         return new CsvExtractor($path);
     }

@@ -85,7 +85,7 @@ class CsvExtractor extends Extractor
     protected string $line_ending = "\n";
 
 
-    public function __construct(string $storage_path)
+    public function __construct(?string $storage_path = null)
     {
         $this->storage_path = $storage_path;
     }

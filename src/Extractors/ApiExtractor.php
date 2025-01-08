@@ -35,9 +35,10 @@ class ApiExtractor extends Extractor
     protected bool $lazy = false;
 
 
-    public function __construct(PendingRequest $request)
+    public function __construct($endpoint = null)
     {
-        $this->request = $request;
+        $this->endpoint = $endpoint;
+        $this->request = new PendingRequest();
     }
 
     /**
