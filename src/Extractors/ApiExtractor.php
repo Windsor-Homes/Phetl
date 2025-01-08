@@ -7,13 +7,14 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use Illuminate\Support\LazyCollection;
-use Windsor\Phetl\Contracts\Extractor;
 
 // TODO: utilize the PendingRequest::sink() method to save the response to a file, and process the file instead of the direct response.
 
-class ApiExtractor implements Extractor
+class ApiExtractor extends Extractor
 {
     protected PendingRequest $request;
+
+    protected Response $response;
 
     protected string $method = 'get';
 
@@ -33,9 +34,6 @@ class ApiExtractor implements Extractor
 
     protected bool $lazy = false;
 
-    protected \Closure $beforeExtraction;
-
-    protected \Closure $afterExtraction;
 
     public function __construct(PendingRequest $request)
     {
@@ -79,42 +77,6 @@ class ApiExtractor implements Extractor
         }
 
         $this->request->{$method}(...$parameters);
-    }
-
-    /**
-     * Set a callable that will be executed after the data is extracted from the response.
-     *
-     * The callable will have access to the Extractor instance, the Response Object, and the Extracted data.
-     *
-     * @return ApiExtractor
-     */
-    public function afterExtraction(callable $callback): static
-    {
-        if (! $callback instanceof \Closure) {
-            $callback = \Closure::fromCallable($callback);
-        }
-
-        $this->afterExtraction = $callback;
-
-        return $this;
-    }
-
-    /**
-     * Set a callable that will be executed before the data is extracted from the response.
-     *
-     * The callable will have access to the Extractor instance, and the Response Object.
-     *
-     * @return ApiExtractor
-     */
-    public function beforeExtraction(callable $callback): static
-    {
-        if (! $callback instanceof \Closure) {
-            $callback = \Closure::fromCallable($callback);
-        }
-
-        $this->beforeExtraction = $callback;
-
-        return $this;
     }
 
     /**
@@ -209,7 +171,11 @@ class ApiExtractor implements Extractor
      */
     public function onError(callable $callback): static
     {
-        $this->onError($callback);
+        if (! $callback instanceof \Closure) {
+            $callback = \Closure::fromCallable($callback);
+        }
+
+        $this->error_handler = $callback;
 
         return $this;
     }
@@ -231,28 +197,18 @@ class ApiExtractor implements Extractor
      */
     public function extract(): Enumerable
     {
-        if ($this->beforeExtraction) {
-            call_user_func($this->beforeExtraction, $this);
-        }
-
-        $response = $this->sendRequest();
+        $this->response = $this->sendRequest();
 
         if ($this->parser) {
-            $data = call_user_func($this->parser, $response);
+            $data = call_user_func($this->parser, $this->response);
             $this->validateParserReturnType($data);
-        } else {
-            $data = $response->collect($this->data_path);
+        }
+        else {
+            $data = $this->response->collect($this->data_path);
         }
 
         if ($this->lazy) {
             $data = $data->lazy();
-        }
-
-        if ($this->afterExtraction) {
-            call_user_func(
-                $this->afterExtraction,
-                $this, $response, $data
-            );
         }
 
         return $data;
@@ -291,9 +247,9 @@ class ApiExtractor implements Extractor
 
         if ($this->error_handler) {
             $response->onError($response);
-        } else {
-            $response->throwUnlessSuccessful();
         }
+
+        $response->throwUnlessSuccessful();
 
         return $this->request->{$this->method}($this->endpoint, $extra_data);
     }
