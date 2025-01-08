@@ -20,7 +20,7 @@ $csv_extractor = Extract::fromCsv()
     ->delimiter(',')
     ->enclosure('"')
     ->escape('\\')
-    ->headerRow(true)
+    ->hasHeader(true)
     ->select([
         'book_title',
         'author_first_name',
