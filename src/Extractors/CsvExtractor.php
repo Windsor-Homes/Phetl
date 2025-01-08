@@ -91,6 +91,18 @@ class CsvExtractor extends Extractor
     }
 
     /**
+     * Set the path to the CSV file.
+     *
+     * @param string $storage_path
+     * @return $this
+     */
+    public function path(string $storage_path): static
+    {
+        $this->storage_path = $storage_path;
+        return $this;
+    }
+
+    /**
      * Set the delimiter used in the CSV file.
      *
      * @param string $delimiter
