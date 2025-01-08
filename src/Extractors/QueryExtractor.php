@@ -24,10 +24,14 @@ class QueryExtractor extends Extractor
      * @param string|null $connection
      */
     public function __construct(
-        string|QueryBuilder|EloquentBuilder $query,
+        string|callable|QueryBuilder|EloquentBuilder $query,
         array $bindings = [],
         string $connection = null
     ) {
+        if (is_callable($query)) {
+            $query = $this->getQueryBuilderFromCallable($query);
+        }
+
         $this->query = $query;
         $this->bindings = $bindings;
         $this->connection = $connection;
@@ -35,15 +39,20 @@ class QueryExtractor extends Extractor
 
     public function extract(): Enumerable
     {
-        return $this->getResults();
-    }
-
-    public function getResults(): Enumerable
-    {
-        if (! is_string($this->query)) {
-            return $this->query->get();
+        if (is_string($this->query)) {
+            return $this->getResultsFromRawQuery();
         }
 
+        return $this->query->get();
+    }
+
+    /**
+     * Get the results from a raw query.
+     *
+     * @return \Illuminate\Support\Enumerable
+     */
+    protected function getResultsFromRawQuery(): Enumerable
+    {
         if ($this->connection) {
             $results = DB::connection($this->connection)
                 ->select($this->query, $this->bindings);
@@ -53,5 +62,41 @@ class QueryExtractor extends Extractor
         }
 
         return collect($results);
+    }
+
+    /**
+     * Determine if the query is a builder instance.
+     *
+     * @param mixed $query
+     * @return bool
+     */
+    protected function queryIsBuilder($query): bool
+    {
+        return $this->query instanceof QueryBuilder
+            || $this->query instanceof EloquentBuilder;
+    }
+
+    /**
+     * Get a Query|Eloquent Builder instance from a callable.
+     *
+     * @return QueryBuilder|EloquentBuilder
+     */
+    protected function getQueryBuilderFromCallable(
+        callable $callback
+    ): QueryBuilder|EloquentBuilder {
+
+        if (! $callback instanceof \Closure) {
+            $callback = \Closure::fromCallable($callback);
+        }
+
+        $query = call_user_func($callback);
+
+        if (! $this->queryIsBuilder($query)) {
+            throw new \RuntimeException(
+                "The callable passed to " . self::class . " must return an instance of " . QueryBuilder::class . " or " . EloquentBuilder::class
+            );
+        }
+
+        return $query;
     }
 }
