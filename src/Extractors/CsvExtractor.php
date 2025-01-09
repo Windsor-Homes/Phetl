@@ -3,14 +3,33 @@
 namespace Windsor\Phetl\Extractors;
 
 use Illuminate\Support\Enumerable;
+use Illuminate\Support\Str;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
+/**
+ * Extract data from a CSV file.
+ *
+ * @method CsvExtractor path(string $path) Set the path to the CSV file.
+ * @method CsvExtractor delimiter(string $delimiter) Set the delimiter used in the CSV file.
+ * @method CsvExtractor enclosure(string $enclosure) Set the enclosure used in the CSV file.
+ * @method CsvExtractor escape(string $escape) Set the escape character used in the CSV file.
+ * @method CsvExtractor hasHeader(bool $has_header) Set if the CSV file has a header line.
+ * @method CsvExtractor ignoreHeader(bool $ignore_header) Set if the header line will be ignored.
+ * @method CsvExtractor header(array $header) Set the header fields.
+ * @method CsvExtractor trim(bool $trim) Set if the CSV file will be trimmed.
+ * @method CsvExtractor strict(bool $strict) Set if the CSV file must have the same number of fields as the header.
+ * @method CsvExtractor skipEmptyLines(bool $skip_empty_lines) Set if empty lines will be skipped.
+ * @method CsvExtractor encoding(string $encoding) Set the encoding of the CSV file.
+ * @method CsvExtractor autoDetectLineEndings(bool $auto_detect_line_endings) Set if the CSV file will be read in binary mode.
+ * @method CsvExtractor lineEnding(string $line_ending) Set the line ending used in the CSV file.
+ */
 class CsvExtractor extends Extractor
 {
     /**
-     * The path to the CSV file. Relative to the storage path.
+     * The path to the CSV file.
      * @var string
      */
-    protected string $storage_path;
+    protected string $path;
 
     /**
      * The delimiter used in the CSV file.
@@ -85,166 +104,65 @@ class CsvExtractor extends Extractor
     protected string $line_ending = "\n";
 
 
-    public function __construct(?string $storage_path = null)
+    public function __construct(?string $path = null)
     {
-        $this->storage_path = $storage_path;
+        $this->path = $path;
     }
 
     /**
-     * Set the path to the CSV file.
+     * Set a property value dynamically.
+     * This will not work for inherited or trait properties.
      *
-     * @param string $storage_path
-     * @return $this
+     * This implementation was chosen to support setter **methods** for properties, without having to write each one manually.
+     *
+     * @param mixed $method
+     * @param mixed $args
+     * @return static
      */
-    public function path(string $storage_path): static
+    public function __call($method, $args)
     {
-        $this->storage_path = $storage_path;
+        $property = Str::snake($method);
+        $own_properties = $this->getOwnProperties();
+
+        if (! property_exists($this, $property)) {
+            throw new \BadMethodCallException(
+                "Method {$method} does not exist."
+            );
+        }
+        elseif (
+            property_exists($this, $property)
+            && !in_array($property, $own_properties)
+        ) {
+            $class_name = static::class;
+            throw new \BadMethodCallException("Property {$property} is not owned by $class_name. Cannot dynamically set inherited or trait properties.");
+        }
+
+        $this->{$property} = $args[0];
         return $this;
     }
 
     /**
-     * Set the delimiter used in the CSV file.
+     * Get the properties that were defined by the current class.
      *
-     * @param string $delimiter
-     * @return $this
+     * @return array
      */
-    public function delimiter(string $delimiter): static
+    protected function getOwnProperties(): array
     {
-        $this->delimiter = $delimiter;
-        return $this;
-    }
+        $class = new \ReflectionClass($this);
+        $properties = $class->getProperties();
+        $own_properties = [];
 
-    /**
-     * Set the enclosure used in the CSV file.
-     *
-     * @param string $enclosure
-     * @return $this
-     */
-    public function enclosure(string $enclosure): static
-    {
-        $this->enclosure = $enclosure;
-        return $this;
-    }
+        foreach ($properties as $property) {
+            $declaring_class = $property->getDeclaringClass()->getName();
 
-    /**
-     * Set the escape character used in the CSV file.
-     *
-     * @param string $escape
-     * @return $this
-     */
-    public function escape(string $escape): static
-    {
-        $this->escape = $escape;
-        return $this;
-    }
+            if ($declaring_classs !== $class->getName()) {
+                continue;
+            }
 
-    /**
-     * Set if the CSV file has a header line.
-     *
-     * @param bool $has_header
-     * @return $this
-     */
-    public function hasHeader(bool $has_header): static
-    {
-        $this->has_header = $has_header;
-        return $this;
-    }
+            $own_properties[] = $property->getName();
+        }
 
-    /**
-     * Set if the header line will be ignored.
-     *
-     * @param bool $ignore_header
-     * @return $this
-     */
-    public function ignoreHeader(bool $ignore_header): static
-    {
-        $this->ignore_header = $ignore_header;
-        return $this;
-    }
-
-    /**
-     * Set the header fields.
-     *
-     * @param array $header
-     * @return $this
-     */
-    public function header(array $header): static
-    {
-        $this->header = $header;
-        return $this;
-    }
-
-    /**
-     * Set if the CSV file will be trimmed.
-     *
-     * @param bool $trim
-     * @return $this
-     */
-    public function trim(bool $trim): static
-    {
-        $this->trim = $trim;
-        return $this;
-    }
-
-    /**
-     * Set if the CSV file must have the same number of fields as the header.
-     *
-     * @param bool $strict
-     * @return $this
-     */
-    public function strict(bool $strict): static
-    {
-        $this->strict = $strict;
-        return $this;
-    }
-
-    /**
-     * Set if empty lines will be skipped.
-     *
-     * @param bool $skip_empty_lines
-     * @return $this
-     */
-    public function skipEmptyLines(bool $skip_empty_lines): static
-    {
-        $this->skip_empty_lines = $skip_empty_lines;
-        return $this;
-    }
-
-    /**
-     * Set the encoding of the CSV file.
-     *
-     * @param string $encoding
-     * @return $this
-     */
-    public function encoding(string $encoding): static
-    {
-        $this->encoding = $encoding;
-        return $this;
-    }
-
-    /**
-     * Set if the CSV file will be read in binary mode.
-     *
-     * @param bool $auto_detect_line_endings
-     * @return $this
-     */
-    public function autoDetectLineEndings(
-        bool $auto_detect_line_endings
-    ): static {
-        $this->auto_detect_line_endings = $auto_detect_line_endings;
-        return $this;
-    }
-
-    /**
-     * Set the line ending used in the CSV file.
-     *
-     * @param string $line_ending
-     * @return $this
-     */
-    public function lineEnding(string $line_ending): static
-    {
-        $this->line_ending = $line_ending;
-        return $this;
+        return $own_properties;
     }
 
     /**
@@ -254,6 +172,10 @@ class CsvExtractor extends Extractor
      */
     public function extract(): Enumerable
     {
+        $reader = SimpleExcelReader::create($this->path);
+
+
+
         return collect();
     }
 }
