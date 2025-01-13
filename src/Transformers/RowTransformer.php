@@ -4,7 +4,7 @@ namespace Windsor\Phetl\Transformers;
 
 use Illuminate\Support\Enumerable;
 
-class RowTransformer extends Transformer
+abstract class RowTransformer extends Transformer
 {
     public function transform(Enumerable $dataset): Enumerable
     {

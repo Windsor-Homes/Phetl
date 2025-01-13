@@ -4,7 +4,7 @@ namespace Windsor\Phetl\Transformers;
 
 use Illuminate\Support\Enumerable;
 
-class ColumnTransformer extends Transformer
+abstract class ColumnTransformer extends Transformer
 {
     private array|string $columns;
 

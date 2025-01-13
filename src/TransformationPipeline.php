@@ -32,14 +32,14 @@ class TransformationPipeline
         return $this->transformers;
     }
 
-    protected function transform($data)
+    protected function run($data)
     {
         $this->runHooks('start-transformations', $this, $data);
 
         foreach ($this->transformers as $transformer) {
             $this->runHooks('before-transformer', $transformer, $data);
 
-            $data = $transformer->transformDataset($data);
+            $data = $transformer->transform($data);
 
             $this->runHooks('after-transformer', $transformer, $data);
         }
