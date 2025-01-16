@@ -3,7 +3,7 @@
 namespace Windsor\Phetl\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Windsor\Phetl\ExtractorBuilder;
+use Windsor\Phetl\Builders\ExtractorBuilder;
 
 /**
  * @see \Windsor\Phetl\ExtractorBuilder

@@ -1,6 +1,6 @@
 <?php
 
-namespace Windsor\Phetl;
+namespace Windsor\Phetl\Builders;
 
 use Windsor\Phetl\Extractors\ApiExtractor;
 use Windsor\Phetl\Extractors\CsvExtractor;
