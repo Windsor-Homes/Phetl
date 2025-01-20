@@ -1,13 +1,9 @@
 <?php
 
-namespace Windsor\Phetl\Transformers\Filters;
-
-use Illuminate\Support\Collection;
-use Windsor\Phetl\Transformers\Transformer;
-use Windsor\Phetl\Utils\Conditions\Builder;
+namespace Windsor\Phetl\Utils\Conditions;
 
 /**
- * Filter data using criteria.
+ * Condition that groups multiple conditions together
  *
  * @method where($field, $operator, $value, $conjunction = 'and', $negate = false)
  * @method orWhere($field, $operator, $value)
@@ -38,23 +34,37 @@ use Windsor\Phetl\Utils\Conditions\Builder;
  * @method whereColumnNotBetween($field, $column_value)
  * @method orWhereColumnNotBetween($field, $column_value)
  */
-class CriteriaFilter
+class NestedCondition implements Condition
 {
-    protected Builder $criteria;
+    protected string $conjunction = 'and';
 
-    public function __construct()
+    protected array $conditions = [];
+
+    public function __construct($conjunction = 'and')
     {
-        $this->criteria = new Builder();
+        $this->conjunction = $conjunction;
     }
 
-    public function __call($name, $arguments)
+    public function addCondition(Condition $condition)
     {
-        if (!method_exists($this->criteria, $name)) {
-            throw new \BadMethodCallException("Method {$name} does not exist on Conditions\Builder");
+        $this->conditions[] = $condition;
+    }
+
+    public function check($row): bool
+    {
+        $result = false;
+
+        foreach ($this->conditions as $condition) {
+            $condition_result = $condition->check($row);
+
+            if ($this->conjunction === 'and') {
+                $result = $result && $condition_result;
+            }
+            else {
+                $result = $result || $condition_result;
+            }
         }
 
-        $this->criteria->{$name}(...$arguments);
-
-        return $this;
+        return $result;
     }
 }
