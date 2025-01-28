@@ -13,7 +13,7 @@ class QueryExtractor extends Extractor
 
     protected array $bindings = [];
 
-    protected string $connection = null;
+    protected ?string $connection = null;
 
 
     /**
@@ -26,7 +26,7 @@ class QueryExtractor extends Extractor
     public function __construct(
         string|callable|QueryBuilder|EloquentBuilder $query = null,
         array $bindings = [],
-        string $connection = null
+        ?string $connection = null
     ) {
         if ($query === null) {
             return;
@@ -42,7 +42,7 @@ class QueryExtractor extends Extractor
     }
 
     public function query(
-        callable|QueryBUilder|EloquentBuilder $query
+        callable|QueryBuilder|EloquentBuilder $query
     ): static {
         $this->query = $query;
 
@@ -56,7 +56,7 @@ class QueryExtractor extends Extractor
     public function raw(
         string $query,
         array $bindings = [],
-        string $connection = null
+        ?string $connection = null
     ): static {
         $this->query = $query;
         $this->bindings = $bindings;

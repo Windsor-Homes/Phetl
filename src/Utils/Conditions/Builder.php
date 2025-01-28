@@ -16,7 +16,7 @@ class Builder
      * @var string[]
      */
     public $operators = [
-        '==', '===', '<', '>', '<=', '>=', '<>', '!=', '!==', '<=>', 'in', 'between',
+        '==', '===', '<', '>', '<=', '>=', '<>', '!=', '!==', '<=>', 'in', 'between', 'instanceof',
     ];
 
 
@@ -79,6 +79,8 @@ class Builder
             $conjunction,
             $negate
         );
+
+        return $this;
     }
 
     /**
@@ -94,7 +96,7 @@ class Builder
     public function prepareValueAndOperator($value, $operator, $use_default = false)
     {
         if ($use_default) {
-            return [$operator, '='];
+            return [$operator, '=='];
         }
         elseif ($this->invalidOperatorAndValue($operator, $value)) {
             throw new \InvalidArgumentException('Illegal operator and value combination.');

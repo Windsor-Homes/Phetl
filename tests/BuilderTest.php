@@ -85,7 +85,7 @@ it('can add with basic operators', function () {
     $conditions = $builder->getConditions();
 
     expect($conditions)->toHaveCount(7);
-    expect($conditions[0]->operator)->toBe('=');
+    expect($conditions[0]->operator)->toBe('==');
     expect($conditions[1]->operator)->toBe('!=');
     expect($conditions[2]->operator)->toBe('>');
     expect($conditions[3]->operator)->toBe('>=');
