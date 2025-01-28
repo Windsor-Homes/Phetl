@@ -8,6 +8,8 @@ class Builder
 {
     protected array $conditions = [];
 
+    protected string $conjunction = 'and';
+
     /**
      * All of the available clause operators.
      *
@@ -29,7 +31,7 @@ class Builder
         mixed $value = null,
         string $conjunction = 'and',
         bool $negate = false
-    ) {
+    ): static {
         /**
          * If the field is an array, we will assume it is either an array of
          * key-value pairs, or an array of condition arrays.
@@ -49,28 +51,28 @@ class Builder
         // wants to begin a nested condition which is wrapped in parentheses.
         // We will add that Closure to the filter and return back out immediately.
         if ($field instanceof \Closure && is_null($operator)) {
-            return $this->whereNested($field, $conjunction);
+            return $this->whereNested($field, $conjunction, $negate);
         }
 
         // If the given operator is not found in the list of valid operators we will
         // assume that the developer is just short-cutting the '=' operators and
         // we will set the operators to '=' and set the values appropriately.
         if ($this->invalidOperator($operator)) {
-            [$value, $operator] = [$operator, '='];
+            [$value, $operator] = [$operator, '=='];
         }
 
         // If the value is "null", we will just assume the developer wants to add a where null condition to the filter. So, we will allow a short-cut here to that method for convenience so the developer doesn't have to check.
         if (is_null($value)) {
-            return $this->whereNull($field, $conjunction, $operator !== '=');
+            return $this->whereNull($field, $conjunction, $operator !== '==');
         }
 
-        $type = 'Basic';
-
-        // Now that we are working with just a simple filter we can put the elements
-        // in our array and add the filter binding to our array of bindings that
-        // will be bound to each SQL statements when it is finally executed.
-        $this->conditions[] = compact(
-            'type', 'field', 'operator', 'value', 'conjunction', 'negate'
+        // Now that we are working with just a simple filter we can put the elements in our array
+        $this->conditions[] = new Where(
+            $field,
+            $operator,
+            $value,
+            $conjunction,
+            $negate
         );
     }
 
@@ -105,8 +107,10 @@ class Builder
      * @param  mixed  $value
      * @return bool
      */
-    protected function invalidOperatorAndValue(string $operator, mixed $value)
-    {
+    protected function invalidOperatorAndValue(
+        string $operator,
+        mixed $value
+    ):bool {
         return is_null($value) && in_array($operator, $this->operators) &&
              ! in_array($operator, ['=', '<>', '!=']);
     }
@@ -117,7 +121,7 @@ class Builder
      * @param  string  $operator
      * @return bool
      */
-    protected function invalidOperator(string $operator)
+    protected function invalidOperator(string $operator): bool
     {
         return ! is_string($operator)
             || (! in_array(strtolower($operator), $this->operators, true));
@@ -127,7 +131,7 @@ class Builder
         array $conditions,
         string $conjunction = 'and',
         string $method = 'where'
-    ) {
+    ): static {
         return $this->whereNested(
             function ($filter) use ($conditions, $conjunction, $method) {
                 foreach ($conditions as $key => $value) {
@@ -150,9 +154,17 @@ class Builder
         \Closure $callback,
         string $conjunction = 'and',
         bool $negate = false
-    ) {
-        $criteria = new NestedCondition($conjunction);
-        $callback($criteria);
+    ): static {
+        $builder = new static();
+        $callback($builder);
+
+        $condition = new NestedCondition(
+            $builder->conditions,
+            $conjunction,
+            $negate
+        );
+
+        $this->conditions[] = $condition;
 
         return $this;
     }
@@ -162,23 +174,28 @@ class Builder
         mixed $operator,
         mixed $value = null,
         bool $negate = false
-    ) {
-        $this->where($field, $operator, $value, 'or');
+    ): static {
+        $this->where($field, $operator, $value, 'or', $negate);
+        return $this;
+    }
+
+    public function whereNot(
+        string $field,
+        mixed $operator,
+        mixed $value,
+        string $conjunction = 'and'
+    ): static {
+        $this->where($field, $operator, $value, $conjunction, true);
 
         return $this;
     }
 
-    public function whereNot(string $field, mixed $operator, mixed $value)
-    {
-        $this->where($field, $operator, $value, 'and', true);
-
-        return $this;
-    }
-
-    public function orWhereNot(string $field, mixed $operator, mixed $value)
-    {
+    public function orWhereNot(
+        string $field,
+        mixed $operator,
+        mixed $value
+    ): static {
         $this->where($field, $operator, $value, 'or', true);
-
         return $this;
     }
 
@@ -187,30 +204,28 @@ class Builder
         array $values,
         string $conjunction = 'and',
         bool $negate = false
-    ) {
-        $this->conditions[] = [
-            'type' => 'basic',
-            'field' => $field,
-            'operator' => 'in',
-            'value' => $values,
-            'conjunction' => $conjunction,
-            'negate' => $negate,
-        ];
-
+    ): static {
+        $this->where($field, 'in', $values, $conjunction, $negate);
         return $this;
     }
 
-    public function whereNotIn($field, array $values, $conjunction = 'and')
-    {
+    public function whereNotIn(
+        string $field,
+        array $values,
+        string $conjunction = 'and'
+    ): static {
         return $this->whereIn($field, $values, $conjunction, true);
     }
 
-    public function orWhereIn($field, array $values)
-    {
-        return $this->whereIn($field, $values, 'or');
+    public function orWhereIn(
+        string $field,
+        array $values,
+        bool $negate = false
+    ): static {
+        return $this->whereIn($field, $values, 'or', $negate);
     }
 
-    public function orWhereNotIn($field, array $values)
+    public function orWhereNotIn(string $field, array $values): static
     {
         return $this->whereIn($field, $values, 'or', true);
     }
@@ -220,7 +235,7 @@ class Builder
         array $values,
         string $conjunction = 'and',
         bool $negate = false
-    ) {
+    ): static {
         if (count($values) !== 2) {
             throw new \InvalidArgumentException('Between filter requires 2 values.');
         }
@@ -234,13 +249,16 @@ class Builder
         string $field,
         array $values,
         string $conjunction = 'and'
-    ) {
+    ): static {
         return $this->whereBetween($field, $values, $conjunction, true);
     }
 
-    public function orWhereBetween(string $field, array $values)
-    {
-        return $this->whereBetween($field, $values, 'or');
+    public function orWhereBetween(
+        string $field,
+        array $values,
+        bool $negate = false
+    ): static {
+        return $this->whereBetween($field, $values, 'or', $negate);
     }
 
     public function orWhereNotBetween(string $field, array $values)
@@ -252,66 +270,76 @@ class Builder
         string $field,
         string $conjunction = 'and',
         $negate = false
-    ) {
-        $this->conditions[] = [
-            'type' => 'basic',
-            'field' => $field,
-            'operator' => '===',
-            'value' => null,
-            'conjunction' => $conjunction,
-            'negate' => $negate,
-        ];
-
+    ): static {
+        $this->where($field, '===', null, $conjunction, $negate);
         return $this;
     }
 
-    public function whereNotNull(string $field, string $conjunction = 'and')
-    {
+    public function whereNotNull(
+        string $field,
+        string $conjunction = 'and'
+    ): static {
         return $this->whereNull($field, $conjunction, true);
+    }
+
+    public function orWhereNull(string $field, bool $negate = false): static
+    {
+        return $this->whereNull($field, 'or', $negate);
+    }
+
+    public function orWhereNotNull(string $field): static
+    {
+        return $this->whereNull($field, 'or', true);
     }
 
     public function whereColumn(
         string $first,
         string $operator,
-        ?string $second = null,
+        array|string $second = null,
         string $conjunction = 'and',
         bool $negate = false
     ): static {
         if (is_null($second)) {
             $second = $operator;
-            $operator = '=';
+            $operator = '==';
         }
 
-        $this->conditions[] = [
-            'type' => 'whereColumn',
-            'field' => $first,
-            'operator' => $operator,
-            'value' => $second,
-            'conjunction' => $conjunction,
-            'negate' => $negate,
-        ];
-
+        $this->conditions[] = new WhereColumn(
+            $first,
+            $operator,
+            $second,
+            $conjunction,
+            $negate
+        );
         return $this;
     }
 
-    public function orWhereColumn($first, $operator, $second)
-    {
-        $this->whereColumn($first, $operator, $second, 'or');
-
+    public function orWhereColumn(
+        string $first,
+        string $operator,
+        string $second = null,
+        bool $negate = false
+    ): static {
+        $this->whereColumn($first, $operator, $second, 'or', $negate);
         return $this;
     }
 
-    public function whereColumnNot($first, $operator, $second)
-    {
-        $this->whereColumn($first, $operator, $second, 'and', true);
-
+    public function whereColumnNot(
+        string $first,
+        string $operator,
+        string $second = null,
+        string $conjunction = 'and'
+    ): static {
+        $this->whereColumn($first, $operator, $second, $conjunction, true);
         return $this;
     }
 
-    public function orWhereColumnNot($first, $operator, $second)
-    {
+    public function orWhereColumnNot(
+        string $first,
+        string $operator,
+        string $second = null
+    ): static {
         $this->whereColumn($first, $operator, $second, 'or', true);
-
         return $this;
     }
 
@@ -320,34 +348,67 @@ class Builder
         array|Collection $columns,
         string $conjunction = 'and',
         bool $negate = false
-    ) {
-        $this->conditions[] = [
-            'type' => 'whereColumn',
-            'field' => $first,
-            'operator' => 'in',
-            'columns' => $columns,
-            'conjunction' => $conjunction,
-            'negate' => $negate,
-        ];
-
+    ): static {
+        $this->whereColumn($first, 'in', $columns, $conjunction, $negate);
         return $this;
     }
 
-    public function whereColumnNotIn($first, $columns, $conjunction = 'and')
-    {
+    public function whereColumnNotIn(
+        string $first,
+        array $columns,
+        string $conjunction = 'and'
+    ): static {
         return $this->whereColumnIn($first, $columns, $conjunction, true);
     }
 
-    public function orWhereColumnIn($first, $columns)
-    {
-        return $this->whereColumnIn($first, $columns, 'or');
+    public function orWhereColumnIn(
+        string $first,
+        array $columns,
+        bool $negate = false
+    ): static {
+        return $this->whereColumnIn($first, $columns, 'or', $negate);
     }
 
-    public function orWhereColumnNotIn($first, $columns)
+    public function orWhereColumnNotIn(string $first, array $columns)
     {
         return $this->whereColumnIn($first, $columns, 'or', true);
     }
 
+    public function whereColumnBetween(
+        string $first,
+        array $columns,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): static {
+        if (count($columns) !== 2) {
+            throw new \InvalidArgumentException('Between filter requires 2 values.');
+        }
+
+        $this->whereColumn($first, 'between', $columns, $conjunction, $negate);
+
+        return $this;
+    }
+
+    public function whereColumnNotBetween(
+        string $first,
+        array $columns,
+        string $conjunction = 'and'
+    ): static {
+        return $this->whereColumnBetween($first, $columns, $conjunction, true);
+    }
+
+    public function orWhereColumnBetween(
+        string $first,
+        array $columns,
+        bool $negate = false
+    ): static {
+        return $this->whereColumnBetween($first, $columns, 'or', $negate);
+    }
+
+    public function orWhereColumnNotBetween(string $first, array $columns)
+    {
+        return $this->whereColumnBetween($first, $columns, 'or', true);
+    }
 
     /**
      * Evaluates the given data against the specified conditions.
@@ -356,79 +417,21 @@ class Builder
      * @param mixed $conditions The conditions to evaluate the data against.
      * @return mixed The result of the evaluation.
      */
-    public function evaluate($data, $conditions)
+    public function evaluate($data)
     {
-        if (empty($conditions)) {
-            return true;
+        if (empty($this->conditions)) {
+            return false;
         }
 
-        $expr_result = null;
-        foreach ($conditions as $condition) {
-            $type =& $condition['type'];
-            $conjunction =& $condition['conjunction'];
+        $nested_condition = new NestedCondition(
+            $this->conditions,
+            $this->conjunction
+        );
 
-            $result = match ($type) {
-                'basic' => $this->evaluateCondition($data, $condition),
-                'whereColumn' => $this->evaluateWhereColumn($data, $condition),
-                'nested' => $this->evaluate($data, $condition['conditions']),
-            };
-
-            if ($expr_result === null) {
-                $expr_result = $result;
-                continue;
-            }
-
-            if ($conjunction == 'and') {
-                $expr_result = $expr_result && $result;
-            }
-            elseif ($conjunction == 'or') {
-                $expr_result = $expr_result || $result;
+        foreach ($data as $row) {
+            if ($nested_condition->check($row)) {
+                return true;
             }
         }
-
-        return $expr_result;
-    }
-
-    public function evaluateCondition($row, $condition)
-    {
-        [
-            'field' => $field,
-            'operator' => $operator,
-            'value' => $value,
-            'negate' => $negate,
-        ] = $condition;
-
-        $field_value = $row[$field];
-
-        $result = match ($operator) {
-            '==' => $field_value == $value,
-            '!=' => $field_value != $value,
-            '===' => $field_value === $value,
-            '!==' => $field_value !== $value,
-            '>' => $field_value > $value,
-            '>=' => $field_value >= $value,
-            '<' => $field_value < $value,
-            '<=' => $field_value <= $value,
-            'in' => in_array($field_value, $value),
-            'not in' => !in_array($field_value, $value),
-            'contains' => strpos($field_value, $value) !== false,
-            'doesnt contain' => strpos($field_value, $value) === false,
-            default => false,
-        };
-
-        if ($negate) {
-            $result = !$result;
-        }
-
-        return $result;
-    }
-
-    public function evaluateWhereColumn($row, $condition)
-    {
-        [$field, $operator, $other_field, $conjunction] = $condition;
-
-        $other_field_value = $row[$other_field];
-
-        return $this->evaluateCondition($row, [$field, $operator, $other_field_value, $conjunction]);
     }
 }
