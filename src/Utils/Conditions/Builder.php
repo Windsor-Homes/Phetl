@@ -20,6 +20,11 @@ class Builder
     ];
 
 
+    public static function make(): static
+    {
+        return new static();
+    }
+
     public function getConditions(): array
     {
         return $this->conditions;
