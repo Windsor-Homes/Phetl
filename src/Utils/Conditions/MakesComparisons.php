@@ -8,7 +8,7 @@ trait MakesComparisons
     protected function compare($value, $target): bool
     {
         $result = match ($this->operator) {
-            '==' => $value == $target,
+            '=', '==' => $value == $target,
             '!=' => $value != $target,
             '===' => $value === $target,
             '!==' => $value !== $target,
@@ -18,6 +18,7 @@ trait MakesComparisons
             '<=' => $value <= $target,
             'in' => $this->compareIn($value, $target),
             'between' => $this->compareBetween($value, $target),
+            'instanceof' => $value instanceof $target,
             default => false,
         };
 

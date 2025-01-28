@@ -199,6 +199,38 @@ class Builder
         return $this;
     }
 
+    public function whereStrict(
+        string $field,
+        mixed $value,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): static {
+        $this->where($field, '===', $value);
+        return $this;
+    }
+
+    public function whereNotStrict(
+        string $field,
+        mixed $value,
+        string $conjunction = 'and'
+    ): static {
+        return $this->whereStrict($field, $value, $conjunction, true);
+    }
+
+    public function orWhereStrict(
+        string $field,
+        mixed $value,
+        bool $negate = false
+    ): static {
+        return $this->whereStrict($field, $value, 'or', $negate);
+    }
+
+
+    public function orWhereNotStrict(string $field, mixed $value): static
+    {
+        return $this->whereStrict($field, $value, 'or', true);
+    }
+
     public function whereIn(
         string $field,
         array $values,
@@ -292,6 +324,39 @@ class Builder
         return $this->whereNull($field, 'or', true);
     }
 
+    public function whereInstanceOf(
+        string $field,
+        string $instance,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): static {
+        $this->where($field, 'instanceof', $instance, $conjunction, $negate);
+        return $this;
+    }
+
+    public function orWhereInstanceOf(
+        string $field,
+        string $instance,
+        bool $negate = false
+    ): static {
+        return $this->whereInstanceOf($field, $instance, 'or', $negate);
+    }
+
+    public function whereNotInstanceOf(
+        string $field,
+        string $instance,
+        string $conjunction = 'and'
+    ): static {
+        return $this->whereInstanceOf($field, $instance, $conjunction, true);
+    }
+
+    public function orWhereNotInstanceOf(
+        string $field,
+        string $instance
+    ): static {
+        return $this->whereInstanceOf($field, $instance, 'or', true);
+    }
+
     public function whereColumn(
         string $first,
         string $operator,
@@ -341,6 +406,37 @@ class Builder
     ): static {
         $this->whereColumn($first, $operator, $second, 'or', true);
         return $this;
+    }
+
+    public function whereColumnStrict(
+        string $first,
+        string $second,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): static {
+        $this->whereColumn($first, '===', $second, $conjunction, $negate);
+        return $this;
+    }
+
+    public function whereColumnNotStrict(
+        string $first,
+        string $second,
+        string $conjunction = 'and'
+    ): static {
+        return $this->whereColumnStrict($first, $second, $conjunction, true);
+    }
+
+    public function orWhereColumnStrict(
+        string $first,
+        string $second,
+        bool $negate = false
+    ): static {
+        return $this->whereColumnStrict($first, $second, 'or', $negate);
+    }
+
+    public function orWhereColumnNotStrict(string $first, string $second): static
+    {
+        return $this->whereColumnStrict($first, $second, 'or', true);
     }
 
     public function whereColumnIn(
