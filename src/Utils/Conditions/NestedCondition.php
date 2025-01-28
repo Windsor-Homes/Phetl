@@ -44,15 +44,24 @@ class NestedCondition extends Condition
 
     public function check($row): bool
     {
-        $result = false;
+        if (empty($this->conditions)) {
+            return false;
+        }
+
+        $result = null;
 
         foreach ($this->conditions as $condition) {
             $condition_result = $condition->check($row);
 
-            if ($this->conjunction === 'and') {
+            if ($result === null) {
+                $result = $condition_result;
+                continue;
+            }
+
+            if ($condition->conjunction === 'and') {
                 $result = $result && $condition_result;
             }
-            else {
+            elseif ($condition->conjunction === 'or') {
                 $result = $result || $condition_result;
             }
         }
