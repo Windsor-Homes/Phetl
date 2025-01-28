@@ -2,33 +2,17 @@
 
 namespace Windsor\Phetl\Utils\Conditions;
 
-class WhereColumn extends Where implements Condition
+class WhereColumn extends Condition
 {
     use MakesComparisons;
 
-    protected string $field;
-
-    protected string $operator;
-
-    protected array|string $column_value;
-
-    protected string $conjunction = 'and';
-
-    protected bool $negate = false;
-
     public function __construct(
-        string $field,
-        string $operator,
-        array|string $column_value,
-        string $conjunction = 'and',
-        bool $negate = false
-    ) {
-        $this->field = $field;
-        $this->operator = $operator;
-        $this->column_value = $column_value;
-        $this->conjunction = $conjunction;
-        $this->negate = $negate;
-    }
+        protected string $field,
+        protected string $operator,
+        protected array|string $column_value,
+        protected string $conjunction = 'and',
+        protected bool $negate = false
+    ) {}
 
     public function check($row): bool
     {
@@ -45,6 +29,6 @@ class WhereColumn extends Where implements Condition
             $target = $row[$this->column_value] ?? null;
         }
 
-        return $this->compare($row_value, $target, $this->negate);
+        return $this->compare($row_value, $target);
     }
 }

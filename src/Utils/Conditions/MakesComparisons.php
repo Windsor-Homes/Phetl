@@ -5,7 +5,7 @@ namespace Windsor\Phetl\Utils\Conditions;
 
 trait MakesComparisons
 {
-    protected function compare($value, $target, $negate = false): bool
+    protected function compare($value, $target): bool
     {
         $result = match ($this->operator) {
             '==' => $value == $target,
@@ -21,7 +21,7 @@ trait MakesComparisons
             default => false,
         };
 
-        if ($negate) {
+        if ($this->negate) {
             return !$result;
         }
 

@@ -34,21 +34,13 @@ namespace Windsor\Phetl\Utils\Conditions;
  * @method whereColumnNotBetween($field, $column_value)
  * @method orWhereColumnNotBetween($field, $column_value)
  */
-class NestedCondition implements Condition
+class NestedCondition extends Condition
 {
-    protected string $conjunction = 'and';
-
-    protected array $conditions = [];
-
-    public function __construct($conjunction = 'and')
-    {
-        $this->conjunction = $conjunction;
-    }
-
-    public function addCondition(Condition $condition)
-    {
-        $this->conditions[] = $condition;
-    }
+    public function __construct(
+        protected array $conditions,
+        protected string $conjunction = 'and',
+        protected bool $negate = false,
+    ) {}
 
     public function check($row): bool
     {

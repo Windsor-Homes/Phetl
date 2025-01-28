@@ -2,7 +2,12 @@
 
 namespace Windsor\Phetl\Utils\Conditions;
 
-interface Condition
+abstract class Condition
 {
-    public function check($row): bool;
+    abstract public function check($row): bool;
+
+    public function __get($name)
+    {
+        return $this->{$name};
+    }
 }
