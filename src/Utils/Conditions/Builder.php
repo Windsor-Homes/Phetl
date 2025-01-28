@@ -182,7 +182,7 @@ class Builder
     public function whereNot(
         string $field,
         mixed $operator,
-        mixed $value,
+        mixed $value = null,
         string $conjunction = 'and'
     ): static {
         $this->where($field, $operator, $value, $conjunction, true);
@@ -509,11 +509,11 @@ class Builder
     /**
      * Evaluates the given data against the specified conditions.
      *
-     * @param mixed $data The data to be evaluated.
+     * @param mixed $row The data to be evaluated.
      * @param mixed $conditions The conditions to evaluate the data against.
      * @return mixed The result of the evaluation.
      */
-    public function evaluate($data)
+    public function evaluate($row)
     {
         if (empty($this->conditions)) {
             return false;
@@ -524,10 +524,6 @@ class Builder
             $this->conjunction
         );
 
-        foreach ($data as $row) {
-            if ($nested_condition->check($row)) {
-                return true;
-            }
-        }
+        return $nested_condition->check($row);
     }
 }
