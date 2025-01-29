@@ -17,18 +17,21 @@ class WhereColumn extends Condition
     public function check($row): bool
     {
         $row_value = $row[$this->field] ?? null;
+        $target = $this->resolveColumnValue($row);
 
-        // if the operator is 'in' or 'between', the column value should be an array, so we map the row values
-        if (in_array($this->operator, ['in', 'between'])) {
-            $target = array_map(
+        return $this->compare($row_value, $target);
+    }
+
+    public function resolveColumnValue($row)
+    {
+        // if the column value is an array, we map the row values
+        if (is_array($this->column_value)) {
+            return array_map(
                 fn ($column) => $row[$column] ?? null,
                 $this->column_value
             );
         }
-        else {
-            $target = $row[$this->column_value] ?? null;
-        }
 
-        return $this->compare($row_value, $target);
+        return $row[$this->column_value] ?? null;
     }
 }
