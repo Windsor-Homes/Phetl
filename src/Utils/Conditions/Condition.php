@@ -10,4 +10,9 @@ abstract class Condition
     {
         return $this->{$name};
     }
+
+    public function toArray(): array
+    {
+        return get_object_vars($this);
+    }
 }

@@ -68,4 +68,18 @@ class NestedCondition extends Condition
 
         return $result;
     }
+
+    public function toArray(): array
+    {
+        $conditions = array_map(
+            fn ($condition) => $condition->toArray(),
+            $this->conditions
+        );
+
+        return [
+            'conditions' => $conditions,
+            'conjunction' => $this->conjunction,
+            'negate' => $this->negate,
+        ];
+    }
 }
