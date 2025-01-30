@@ -13,6 +13,14 @@ class NestedCondition extends Condition
         protected bool $negate = false,
     ) {}
 
+    public static function make(
+        array $conditions,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): self {
+        return new self($conditions, $conjunction, $negate);
+    }
+
     public function check($row): bool
     {
         if (empty($this->conditions)) {

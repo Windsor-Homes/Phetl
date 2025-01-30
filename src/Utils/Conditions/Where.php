@@ -15,6 +15,16 @@ class Where extends Condition
         protected bool $negate = false,
     ) {}
 
+    public static function make(
+        string $field,
+        string $operator,
+        mixed $value,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): self {
+        return new self($field, $operator, $value, $conjunction, $negate);
+    }
+
     public function check($row): bool
     {
         $row_value = $row[$this->field] ?? null;

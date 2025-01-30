@@ -14,6 +14,16 @@ class WhereColumn extends Condition
         protected bool $negate = false
     ) {}
 
+    public static function make(
+        string $field,
+        string $operator,
+        array|string $column_value,
+        string $conjunction = 'and',
+        bool $negate = false
+    ): self {
+        return new self($field, $operator, $column_value, $conjunction, $negate);
+    }
+
     public function check($row): bool
     {
         $row_value = $row[$this->field] ?? null;
