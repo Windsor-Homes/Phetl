@@ -39,6 +39,10 @@ class NestedCondition extends Condition
 
             if ($condition->conjunction === 'and') {
                 $result = $result && $condition_result;
+
+                if ($result === false) {
+                    return false;
+                }
             }
             elseif ($condition->conjunction === 'or') {
                 $result = $result || $condition_result;
