@@ -3,28 +3,26 @@
 use Windsor\Phetl\Utils\Conditions\WhereColumn;
 
 // test that WhereColumn can resolve the column value(s) from the row
-it('should resolve column value from row', function () {
+it('can resolve single values from a given column', function () {
     $row = [
         'name' => 'John Doe',
         'age' => 30,
-        'email' => ''
     ];
-
     $condition = new WhereColumn('name', '=', 'age');
+    $result = $condition->resolveColumnValue($row);
 
-    expect($condition->resolveColumnValue($row))->toBe(30);
+    expect($result)->toBe(30);
 });
 
-it('should resolve multiple column values from row', function () {
+it('can resolve an array of values from an array of columns', function () {
     $row = [
         'name' => 'John Doe',
         'age' => 30,
         'spouse_age' => 28,
-        'email' => '',
     ];
-
     $condition = new WhereColumn('name', 'between', ['age', 'spouse_age']);
+    $result = $condition->resolveColumnValue($row);
 
-    expect($condition->resolveColumnValue($row))->toBe([30, 28]);
+    expect($result)->toBe([30, 28]);
 });
 
