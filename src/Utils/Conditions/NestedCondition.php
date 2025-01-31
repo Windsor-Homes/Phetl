@@ -30,22 +30,16 @@ class NestedCondition extends Condition
         $result = null;
 
         foreach ($this->conditions as $condition) {
-            $condition_result = $condition->check($row);
-
             if ($result === null) {
-                $result = $condition_result;
+                $result = $condition->check($row);
                 continue;
             }
 
             if ($condition->conjunction === 'and') {
-                $result = $result && $condition_result;
-
-                if ($result === false) {
-                    return false;
-                }
+                $result = $result && $condition->check($row);
             }
             elseif ($condition->conjunction === 'or') {
-                $result = $result || $condition_result;
+                $result = $result || $condition->check($row);
             }
         }
 
