@@ -3,8 +3,9 @@
 namespace Windsor\Phetl\Transformers;
 
 use Illuminate\Support\Enumerable;
+use Windsor\Phetl\Contracts\Transformer;
 
-abstract class RowTransformer extends Transformer
+abstract class RowTransformer implements Transformer
 {
     public function transform(Enumerable $dataset): Enumerable
     {

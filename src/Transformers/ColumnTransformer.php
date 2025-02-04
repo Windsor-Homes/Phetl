@@ -2,9 +2,10 @@
 
 namespace Windsor\Phetl\Transformers;
 
+use Windsor\Phetl\Contracts\Transformer;
 use Illuminate\Support\Enumerable;
 
-abstract class ColumnTransformer extends Transformer
+abstract class ColumnTransformer implements Transformer
 {
     private array|string $columns;
 

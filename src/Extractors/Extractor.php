@@ -2,11 +2,12 @@
 
 namespace Windsor\Phetl\Extractors;
 
+use Windsor\Phetl\Contracts\Extractor as ExtractorContract;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use Windsor\Phetl\Concerns\HasLifecycleHooks;
 
-abstract class Extractor
+abstract class Extractor implements ExtractorContract
 {
     use HasLifecycleHooks;
 
