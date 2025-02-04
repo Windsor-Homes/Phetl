@@ -8,8 +8,6 @@ class Builder
 {
     protected array $conditions = [];
 
-    protected string $conjunction = 'and';
-
     /**
      * All of the available clause operators.
      *
@@ -551,11 +549,35 @@ class Builder
             return false;
         }
 
-        $nested_condition = new NestedCondition(
-            $this->conditions,
-            $this->conjunction
-        );
+        $nested_condition = $this->build();
 
         return $nested_condition->check($row);
+    }
+
+    public function build(): NestedCondition
+    {
+        return new NestedCondition($this->conditions);
+    }
+
+    /**
+     * alias for evaluate
+     *
+     * @param [type] $row
+     * @return boolean
+     */
+    public function check($row): bool
+    {
+        return $this->evaluate($row);
+    }
+
+    /**
+     * alias for evaluate
+     *
+     * @param [type] $row
+     * @return boolean
+     */
+    public function run($row): bool
+    {
+        return $this->check($row);
     }
 }
