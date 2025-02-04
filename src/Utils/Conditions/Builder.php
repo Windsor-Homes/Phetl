@@ -318,7 +318,7 @@ class Builder
         string $field,
         bool $strict = false,
         string $conjunction = 'and',
-        $negate = false,
+        bool $negate = false,
     ): static {
         $operator = $strict ? '===' : '==';
 

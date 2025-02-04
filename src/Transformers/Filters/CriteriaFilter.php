@@ -3,58 +3,44 @@
 namespace Windsor\Phetl\Transformers\Filters;
 
 use Illuminate\Support\Collection;
-use Windsor\Phetl\Transformers\Transformer;
+use Illuminate\Support\Enumerable;
 use Windsor\Phetl\Utils\Conditions\Builder;
+use Windsor\Phetl\Contracts\Filter;
 
-/**
- * Filter data using criteria.
- *
- * @method where($field, $operator, $value, $conjunction = 'and', $negate = false)
- * @method orWhere($field, $operator, $value)
- * @method whereNot($field, $operator, $value)
- * @method orWhereNot($field, $operator, $value)
- * @method whereIn($field, $values)
- * @method orWhereIn($field, $values)
- * @method whereNotIn($field, $values)
- * @method orWhereNotIn($field, $values)
- * @method whereBetween($field, $values)
- * @method orWhereBetween($field, $values)
- * @method whereNotBetween($field, $values)
- * @method orWhereNotBetween($field, $values)
- * @method whereNull($field)
- * @method orWhereNull($field)
- * @method whereNotNull($field)
- * @method orWhereNotNull($field)
- * @method whereColumn($field, $operator, $column_value, $conjunction = 'and', $negate = false)
- * @method orWhereColumn($field, $operator, $column_value)
- * @method whereColumnNot($field, $operator, $column_value)
- * @method orWhereColumnNot($field, $operator, $column_value)
- * @method whereColumnIn($field, $column_value)
- * @method orWhereColumnIn($field, $column_value)
- * @method whereColumnNotIn($field, $column_value)
- * @method orWhereColumnNotIn($field, $column_value)
- * @method whereColumnBetween($field, $column_value)
- * @method orWhereColumnBetween($field, $column_value)
- * @method whereColumnNotBetween($field, $column_value)
- * @method orWhereColumnNotBetween($field, $column_value)
- */
-class CriteriaFilter
+class CriteriaFilter implements Filter
 {
     protected Builder $criteria;
 
-    public function __construct()
+    public function __construct(Builder $criteria)
     {
-        $this->criteria = new Builder();
+        $this->criteria = $criteria;
     }
 
-    public function __call($name, $arguments)
+    /**
+     * Make a new CriteriaFilter instance.
+     *
+     * You may pass an array of criteria or a closure that receives a Builder instance.
+     * Passing an array will be equivalent to calling `addArrayOfConditions` on the builder.
+     *
+     * @param array|\Closure|null|null $criteria
+     * @return self
+     */
+    public static function make(array|\Closure|null $criteria = null): self
     {
-        if (!method_exists($this->criteria, $name)) {
-            throw new \BadMethodCallException("Method {$name} does not exist on Conditions\Builder");
+        $builder = Builder::make();
+
+        if (is_array($criteria)) {
+            $builder = $builder->addArrayOfConditions($criteria);
+        }
+        elseif ($criteria instanceof \Closure) {
+            $builder = $criteria($builder);
         }
 
-        $this->criteria->{$name}(...$arguments);
+        return new self($builder);
+    }
 
-        return $this;
+    public function transform(Enumerable $dataset): Enumerable
+    {
+        return $dataset->filter([$this->criteria, 'evaluate']);
     }
 }
