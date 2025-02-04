@@ -43,6 +43,10 @@ class NestedCondition extends Condition
             }
         }
 
+        if ($this->negate) {
+            return !$result;
+        }
+
         return $result;
     }
 
