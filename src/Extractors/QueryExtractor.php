@@ -7,7 +7,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Enumerable;
 use Illuminate\Support\Facades\DB;
 
-class QueryExtractor extends Extractor
+class QueryExtractor extends BaseExtractor
 {
     protected string|QueryBuilder|EloquentBuilder $query;
 

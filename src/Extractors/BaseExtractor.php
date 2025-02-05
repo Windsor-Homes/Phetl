@@ -2,19 +2,18 @@
 
 namespace Windsor\Phetl\Extractors;
 
-use Windsor\Phetl\Contracts\Extractor as ExtractorContract;
+use Windsor\Phetl\Contracts\Extractor as Extractor;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use Windsor\Phetl\Concerns\HasLifecycleHooks;
 
-abstract class Extractor implements ExtractorContract
+abstract class BaseExtractor implements Extractor
 {
     use HasLifecycleHooks;
 
     abstract public function extract(): Enumerable;
 
-
-    public function __invoke(): Enumerable
+    public function run(): Enumerable
     {
         $this->runHooks('before-extraction', $this);
 
@@ -23,6 +22,11 @@ abstract class Extractor implements ExtractorContract
         $this->runHooks('after-extraction', $this, $data);
 
         return $data;
+    }
+
+    public function __invoke(): Enumerable
+    {
+        return $this->run();
     }
 
     /**

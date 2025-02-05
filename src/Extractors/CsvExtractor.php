@@ -5,7 +5,7 @@ namespace Windsor\Phetl\Extractors;
 use Illuminate\Support\Enumerable;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
-class CsvExtractor extends Extractor
+class CsvExtractor extends BaseExtractor
 {
     protected SimpleExcelReader $reader;
 

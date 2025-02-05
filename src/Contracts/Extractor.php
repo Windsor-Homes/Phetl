@@ -6,5 +6,10 @@ use Illuminate\Support\Enumerable;
 
 interface Extractor
 {
-    public function extract(): Enumerable;
+    /**
+     * Run the extraction process.
+     *
+     * @return Enumerable
+     */
+    public function run(): Enumerable;
 }

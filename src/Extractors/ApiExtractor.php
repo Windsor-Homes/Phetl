@@ -10,7 +10,7 @@ use Illuminate\Support\LazyCollection;
 
 // TODO: utilize the PendingRequest::sink() method to save the response to a file, and process the file instead of the direct response.
 
-class ApiExtractor extends Extractor
+class ApiExtractor extends BaseExtractor
 {
     protected PendingRequest $request;
 
