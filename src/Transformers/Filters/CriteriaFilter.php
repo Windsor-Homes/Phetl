@@ -2,12 +2,10 @@
 
 namespace Windsor\Phetl\Transformers\Filters;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use Windsor\Phetl\Utils\Conditions\Builder;
-use Windsor\Phetl\Contracts\Filter;
 
-class CriteriaFilter implements Filter
+class CriteriaFilter extends BaseFilter
 {
     protected Builder $criteria;
 
@@ -25,8 +23,13 @@ class CriteriaFilter implements Filter
      * @param array|\Closure|null|null $criteria
      * @return self
      */
-    public static function make(array|\Closure|null $criteria = null): self
-    {
+    public static function make(
+        array|Builder|\Closure|null $criteria = null
+    ): self {
+        if ($criteria instanceof Builder) {
+            return new self($criteria);
+        }
+
         $builder = Builder::make();
 
         if (is_array($criteria)) {
@@ -39,7 +42,13 @@ class CriteriaFilter implements Filter
         return new self($builder);
     }
 
-    public function transform(Enumerable $dataset): Enumerable
+    /**
+     * Apply the filter to the dataset.
+     *
+     * @param Enumerable $dataset
+     * @return Enumerable
+     */
+    public function filter(Enumerable $dataset): Enumerable
     {
         return $dataset->filter([$this->criteria, 'evaluate']);
     }
